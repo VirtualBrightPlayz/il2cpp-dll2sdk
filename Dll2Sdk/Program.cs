@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,13 +24,13 @@ namespace Dll2Sdk
             {
                 foreach (var typeRef in module.GetTypeRefs())
                 {
-                    var rid = typeRef.ResolveTypeDef()?.Rid;
-                    if (rid != null)
+                    var rn = typeRef.ResolveTypeDef()?.ReflectionName;
+                    if (rn != null)
                     {
-                        if (!typeRefs.TryGetValue($"{typeRef.DefinitionAssembly.Name}_{rid}", out var l))
+                        if (!typeRefs.TryGetValue($"{typeRef.DefinitionAssembly.Name}_{rn}", out var l))
                         {
                             l = new List<TypeRef>();
-                            typeRefs.Add($"{typeRef.DefinitionAssembly.Name}_{rid}", l);
+                            typeRefs.Add($"{typeRef.DefinitionAssembly.Name}_{rn}", l);
                         }
                         l.Add(typeRef);
                     }
@@ -53,7 +53,7 @@ namespace Dll2Sdk
                     var t = typesToUnNest.Pop();
                     var dt = t.DeclaringType;
 
-                    if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.Rid}", out var l))
+                    if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.ReflectionName}", out var l))
                     {
                         l = new List<TypeRef>();
                     }
