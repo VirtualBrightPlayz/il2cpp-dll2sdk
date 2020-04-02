@@ -9,22 +9,22 @@ namespace Dll2Sdk.Utils
     {
         private static Dictionary<TypeDef, HashSet<MethodDef>> _interfacedMethods = new Dictionary<TypeDef, HashSet<MethodDef>>();
 
-        public static string TypeDefinitionStr(this MethodDef method)
+        public static string TypeDefinitionStr(this MethodDef method, string context = null)
         {
             var builder = new StringBuilder();
-            builder.Append(method.ReturnType.ParsedReferenceTypeDefinition());
+            builder.Append(method.ReturnType.ParsedReferenceTypeDefinition(/*context: context*/));
             builder.Append("(*)(");
-            builder.Append(string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? $"{p.Type.ToTypeDefOrRef().ParsedFullName()}*" : p.Type.ParsedReferenceTypeDefinition())}")));
+            builder.Append(string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? $"{p.Type.ParsedTypeSignatureStr(context: context)/*p.Type.ToTypeDefOrRef().ParsedFullName()*/}*" : p.Type.ParsedReferenceTypeDefinition(context: null))}")));
             builder.Append(")");
             return builder.ToString();
         }
 
-        public static string VirtualTypeDefinitionStr(this MethodDef method)
+        public static string VirtualTypeDefinitionStr(this MethodDef method, string context = null)
         {
             var builder = new StringBuilder();
-            builder.Append(method.ReturnType.ParsedReferenceTypeDefinition());
+            builder.Append(method.ReturnType.ParsedReferenceTypeDefinition(/*context: context*/));
             builder.Append("(*)(");
-            builder.Append(string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? $"{p.Type.ToTypeDefOrRef().ParsedFullName()}*" : p.Type.ParsedReferenceTypeDefinition())}").Append("void*")));
+            builder.Append(string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? $"{p.Type.ParsedTypeSignatureStr(context: context)/*p.Type.ToTypeDefOrRef().ParsedFullName()*/}*" : p.Type.ParsedReferenceTypeDefinition(context: context))}").Append("void*")));
             builder.Append(")");
             return builder.ToString();
         }
@@ -43,15 +43,33 @@ namespace Dll2Sdk.Utils
 
         public static string InvokeStr(this MethodDef method, object rva)
         {
+            var builder = new StringBuilder();
+            //string ctx = method.TypeArgumentStr();
+
+            if (method.HasGenericParameters)
+            {
+                builder.Append("<");
+                builder.Append(string.Join(", ", method.GenericParameters.Select(g => $"{g.Name.String.Parseable()}")));
+                builder.Append("> ");
+            }
+            else if (method.DeclaringType.GenericParameters.Count > 0)
+            {
+                builder.Append("<");
+                builder.Append(string.Join(", ", method.DeclaringType.GenericParameters.Select(g => $"{g.Name.String.Parseable()}")));
+                builder.Append("> ");
+            }
+            string ctx = builder.ToString();
+            if (true || ctx.Length <= 2)
+                ctx = null;
             if (method.IsVirtual && !method.DeclaringType.IsValueType)
             {
                 return
-                    $"{{ const auto& Data = this->ClassPtr->VTable[{method.GetSlot()}]; return reinterpret_cast<{method.VirtualTypeDefinitionStr()}>(Data.methodPtr)({string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? "this" : ((p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}") + "_"))}").Append("Data.method"))}); }}";
+                    $"{{ const VirtualInvokeData& Data = this->ClassPtr->VTable[{method.GetSlot()}]; return reinterpret_cast<{method.VirtualTypeDefinitionStr(ctx)}>(Data.methodPtr)({string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? "this" : ((p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}") + "_"))}").Append("Data.method"))}); }}";
             }
             else
             {
                 return
-                    $"{{ return reinterpret_cast<{method.TypeDefinitionStr()}>(DLL2SDK::GameAssemblyBase + {rva:X8})({string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? "this" : ((p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}") + "_"))}"))}); }}";
+                    $"{{ return reinterpret_cast<{method.TypeDefinitionStr(ctx)}>(DLL2SDK::GameAssemblyBase + {rva:X8})({string.Join(", ", method.Parameters.Select((p, i) => $"{(p.IsHiddenThisParameter ? "this" : ((p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}") + "_"))}"))}); }}";
             }
         }
 
@@ -61,7 +79,14 @@ namespace Dll2Sdk.Utils
                 method.Parameters.Where(p => !p.IsHiddenThisParameter).Select((p, i) =>
                     $"{p.Type.ParsedReferenceTypeDefinition()} {(p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}")}_"));
         }
-        
+
+        public static string TypeArgumentStr(this MethodDef method)
+        {
+            return "<" + string.Join(", ",
+                method.Parameters.Where(p => !p.IsHiddenThisParameter).Select((p, i) =>
+                    $"{p.Type.ParsedTypeSignatureStr(typesOnly: true)} {(p.Name.Length > 0 ? p.Name.Parseable() : $"a{i}")}_")) + ">";
+        }
+
         public static string ImplementationStr(this MethodDef method, object rva)
         {
             var builder = new StringBuilder();

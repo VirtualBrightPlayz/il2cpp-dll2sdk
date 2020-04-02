@@ -39,6 +39,7 @@ namespace Dll2Sdk
                 {
                     if (ts != null && ts.IsValueType && !ts.IsPrimitive)
                     {
+                        //Console.WriteLine(ts.FullName + " is non primitive and is struct?");
                         foreach (var t2 in ts.UsedTypes())
                         {
                             var tn = t2.GetNonNestedTypeRefScope().ResolveTypeDef();

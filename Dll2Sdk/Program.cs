@@ -39,7 +39,16 @@ namespace Dll2Sdk
 
             foreach (var module in modules)
             {
+                void GetNestedTypes(ref Stack<TypeDef> stack, IList<TypeDef> defs)
+                {
+                    foreach (var type in defs)
+                    {
+                        GetNestedTypes(ref stack, type.NestedTypes);
+                    }
+                }
+
                 var typesToUnNest = new Stack<TypeDef>();
+                //GetNestedTypes(ref typesToUnNest, module.Types);
                 foreach (var type in module.Types)
                 {
                     foreach (var nestedType in type.NestedTypes)
@@ -48,16 +57,28 @@ namespace Dll2Sdk
                     }
                 }
 
+                //var declaringTypes = new Dictionary<TypeDef, TypeDef>();
+
                 while (typesToUnNest.Count > 0)
                 {
                     var t = typesToUnNest.Pop();
                     var dt = t.DeclaringType;
 
+                    //Console.WriteLine($"{t.DefinitionAssembly.Name}_{t.FullName}");
+
                     if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.FullName}", out var l))
                     {
                         l = new List<TypeRef>();
                     }
-
+                    // debuggin' shit
+                    /*else
+                    {
+                        Console.WriteLine(l.Count);
+                        foreach (var i in l)
+                        {
+                            Console.WriteLine(i.FullName);
+                        }
+                    }*/
                     t.Name = $"{dt.Name}_{t.Name}";
                     t.Namespace = dt.Namespace;
                     t.DeclaringType = null;
@@ -65,6 +86,11 @@ namespace Dll2Sdk
                     if (t.IsEnum)
                     {
                         t.GenericParameters.Clear();
+                    }
+
+                    if (t.IsValueType)
+                    {
+                        Console.WriteLine(t.Name + " is struct");
                     }
 
                     module.Types.Add(t);
@@ -75,6 +101,11 @@ namespace Dll2Sdk
                         t2.Namespace = t.Namespace;
                         t2.ResolutionScope = module;
                         t2.ResolveTypeDefThrow();
+                        /*var t3 = t2.ResolveThrow();
+                        if (t3 != null)
+                        {
+                            module.Types.Add(t3);
+                        }*/
                     }
 
                     foreach (var st in t.NestedTypes)

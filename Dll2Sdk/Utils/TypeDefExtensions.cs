@@ -21,7 +21,7 @@ namespace Dll2Sdk.Utils
                 {
                     typeBuilder.Append("template <");
                     typeBuilder.Append(string.Join(", ", gps.Select(p => $"typename {p.Name.String.Parseable()}")));
-                    typeBuilder.Append("> ");   
+                    typeBuilder.Append("> ");
                 }
             }
             if (typeDef.IsEnum)
@@ -35,6 +35,7 @@ namespace Dll2Sdk.Utils
             else
             {
                 typeBuilder.Append("struct ");
+                //System.Console.WriteLine(typeDef.Name.Parseable());
                 typeBuilder.Append(typeDef.Name.String.Parseable());
             }
             return typeBuilder.ToString();

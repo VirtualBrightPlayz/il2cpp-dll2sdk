@@ -22,12 +22,32 @@ namespace Dll2Sdk.Utils
             return typeBuilder.ToString();
         }
 
+        public static string ParsedFullNamespace(this ITypeDefOrRef typeDef, out bool didItWork)
+        {
+            var typeBuilder = new StringBuilder();
+            typeBuilder.Append("DLL2SDK::");
+            typeBuilder.Append(typeDef.DefinitionAssembly.Name.String.Parseable());
+
+            var ns = typeDef.Namespace.Split('.');
+            typeBuilder.Append(ns.Any(n => n.Length > 0)
+                ? $"::{string.Join("::", ns.Where(n => n.Length > 0).Select(n => n.Parseable()))}"
+                : "");
+            didItWork = ns.Any(n => n.Length > 0);
+            return typeBuilder.ToString();
+        }
+
         public static string ParsedFullName(this ITypeDefOrRef typeDef)
         {
             var typeBuilder = new StringBuilder();
-            typeBuilder.Append(typeDef.ParsedFullNamespace());
+            bool didwork = false;
+            typeBuilder.Append(typeDef.ParsedFullNamespace(out didwork));
             typeBuilder.Append("::");
-            typeBuilder.Append(typeDef.Name.String.Parseable());
+            //Console.WriteLine(typeDef.FullName);
+            string[] arr = typeDef.FullName.EndAt(typeDef.Name.String).Split('.');
+            if (!didwork)
+                typeBuilder.Append(string.Join("::", arr.Where(n => n.Length > 0).Select(n => n.Parseable())));
+            else
+                typeBuilder.Append(arr[arr.Length - 1].Parseable()/*typeDef.Name.String.Parseable()*/);
             return typeBuilder.ToString();
         }
     }

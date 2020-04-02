@@ -30,15 +30,15 @@ namespace Dll2Sdk.Utils
             return types;
         }
         
-        public static string ParsedReferenceTypeDefinition(this TypeSig typeSig)
+        public static string ParsedReferenceTypeDefinition(this TypeSig typeSig, string context = null)
         {
-            var s = ParsedTypeSignatureStr(typeSig);
+            var s = ParsedTypeSignatureStr(typeSig, context: context);
             if (!typeSig.IsValueType && !typeSig.IsGenericParameter)
                 s += "*";
             return s;
         }
         
-        public static string ParsedTypeSignatureStr(this TypeSig typeSig, bool useValueTypes = true)
+        public static string ParsedTypeSignatureStr(this TypeSig typeSig, bool useValueTypes = true, string context = null, bool typesOnly = false)
         {
             switch (typeSig.ElementType)
             {
@@ -84,7 +84,7 @@ namespace Dll2Sdk.Utils
 
             if (typeSig.IsArray || typeSig.IsSZArray)
             {
-                return $"DLL2SDK::Array<{typeSig.Next.ParsedReferenceTypeDefinition()}>";
+                return $"DLL2SDK::Array<{typeSig.Next.ParsedReferenceTypeDefinition(context: context)}>";
             }
 
             if (typeSig.IsGenericParameter)
@@ -99,7 +99,7 @@ namespace Dll2Sdk.Utils
                 genericCtx = new List<string>(gi.GenericArguments.Count);
                 foreach (var t in gi.GenericArguments)
                 {
-                    genericCtx.Add(t.ParsedReferenceTypeDefinition());
+                    genericCtx.Add(t.ParsedReferenceTypeDefinition(context: context));
                 }
             }
             
@@ -117,16 +117,24 @@ namespace Dll2Sdk.Utils
             if (genericCtx.Count > 0)
             {
                 var builder = new StringBuilder();
-                builder.Append(typeSig.ToTypeDefOrRef().ParsedFullName());
-                builder.Append("<");
-                builder.Append(string.Join(", ", genericCtx));
-                builder.Append(">");
+                if (!typesOnly)
+                    builder.Append(typeSig.ToTypeDefOrRef().ParsedFullName());
+                if (context == null)
+                {
+                    builder.Append("<");
+                    builder.Append(string.Join(", ", genericCtx));
+                    builder.Append(">");
+                }
+                else
+                {
+                    builder.Append(context);
+                }
                 return builder.ToString();
             }
             
             if (typeSig.IsByRef || typeSig.IsPointer)
             {
-                return $"{typeSig.Next.ParsedTypeSignatureStr()}";
+                return $"{typeSig.Next.ParsedTypeSignatureStr(context: context)}";
             }
             
             return typeSig.ToTypeDefOrRef().ParsedFullName();

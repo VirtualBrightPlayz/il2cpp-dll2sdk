@@ -18,5 +18,10 @@ namespace Dll2Sdk.Utils
             }
             return builder.ToString();
         }
+
+        public static string EndAt(this string str, string end)
+        {
+            return str.Substring(0, str.IndexOf(end) + end.Length);
+        }
     }
 }
