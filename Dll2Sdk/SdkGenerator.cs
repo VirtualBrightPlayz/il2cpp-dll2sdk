@@ -69,6 +69,11 @@ namespace Dll2Sdk
                     {
                         CheckDep(arg.Type);
                     }
+
+                    if (method.HasGenericParameters)
+                    {
+                        CheckDep(method.ReturnType);
+                    }
                 }
 
                 if (!canVisit)
