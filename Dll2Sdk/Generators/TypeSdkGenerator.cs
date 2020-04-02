@@ -90,10 +90,15 @@ namespace Dll2Sdk.Generators
                             builder.AppendIndentedLine("struct");
                             builder.AppendIndentedLine("{");
                             builder.Indent();
-                            var offset = field.CustomAttributes
+                            //so in other news c++ sucks
+                            var offset = new System.ComponentModel.Int32Converter().ConvertFromString(field
+                                .CustomAttributes
                                 .First(a => a.TypeFullName.Contains("FieldOffset"))
-                                .GetNamedArgument("Offset", true).Value;
-                            builder.AppendIndentedLine($"uint8_t offset_{++i}[{offset}];");
+                                .GetNamedArgument("Offset", true).Value.ToString());
+                            if (offset != null && (int)offset != 0)
+                            {
+                                builder.AppendIndentedLine($"uint8_t offset_{++i}[{offset:X}];");
+                            }
                             builder.AppendIndentedLine(field.ParsedTypeDefinitionStr());
                             
                             builder.Outdent();
