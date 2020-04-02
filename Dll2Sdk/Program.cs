@@ -64,21 +64,12 @@ namespace Dll2Sdk
                     var t = typesToUnNest.Pop();
                     var dt = t.DeclaringType;
 
-                    //Console.WriteLine($"{t.DefinitionAssembly.Name}_{t.FullName}");
 
                     if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.FullName}", out var l))
                     {
                         l = new List<TypeRef>();
                     }
-                    // debuggin' shit
-                    /*else
-                    {
-                        Console.WriteLine(l.Count);
-                        foreach (var i in l)
-                        {
-                            Console.WriteLine(i.FullName);
-                        }
-                    }*/
+
                     t.Name = $"{dt.Name}_{t.Name}";
                     t.Namespace = dt.Namespace;
                     t.DeclaringType = null;
@@ -86,11 +77,6 @@ namespace Dll2Sdk
                     if (t.IsEnum)
                     {
                         t.GenericParameters.Clear();
-                    }
-
-                    if (t.IsValueType)
-                    {
-                        Console.WriteLine(t.Name + " is struct");
                     }
 
                     module.Types.Add(t);
@@ -101,11 +87,6 @@ namespace Dll2Sdk
                         t2.Namespace = t.Namespace;
                         t2.ResolutionScope = module;
                         t2.ResolveTypeDefThrow();
-                        /*var t3 = t2.ResolveThrow();
-                        if (t3 != null)
-                        {
-                            module.Types.Add(t3);
-                        }*/
                     }
 
                     foreach (var st in t.NestedTypes)
