@@ -35,17 +35,6 @@ namespace Dll2Sdk
                     continue;
                 
                 var canVisit = true;
-                
-                foreach (var iface in currentVisited.Interfaces)
-                {
-                    var underlyingType = iface.Interface.ResolveTypeDef();
-                    if (underlyingType != null && underlyingType.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(underlyingType))
-                    {
-                        canVisit = false;
-                        toVisit.AddToBack(underlyingType);
-                    }
-                }
-
                 var baseType = currentVisited.BaseType?.ResolveTypeDef();
                 if (baseType != null && baseType.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(baseType))
                 {
@@ -58,28 +47,13 @@ namespace Dll2Sdk
                     var tf = valueField.FieldType.GetNonNestedTypeRefScope().ResolveTypeDef();
                     if (tf != null && tf.IsValueType)
                     {
-                        if (tf != currentVisited && tf.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(tf))
+                        foreach (var t2 in valueField.FieldType.UsedTypes())
                         {
-                            canVisit = false;
-                            toVisit.AddToBack(tf);
-                        }
-
-                        //todo: support nested generic value type nonsense
-                        var typeSig = valueField.FieldType;
-                        if (typeSig.IsGenericInstanceType)
-                        {
-                            var gi = typeSig.ToGenericInstSig();
-                            foreach (var gp in gi.GenericArguments)
+                            var tn = t2.GetNonNestedTypeRefScope().ResolveTypeDef();
+                            if (tn != null && tn != currentVisited && tn.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(tn))
                             {
-                                var bt = gp.GetNonNestedTypeRefScope()?.ResolveTypeDef();
-                                if (bt != null)
-                                {
-                                    if (bt != currentVisited && bt.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(bt))
-                                    {
-                                        canVisit = false;
-                                        toVisit.AddToBack(bt);
-                                    }
-                                }
+                                canVisit = false;
+                                toVisit.AddToBack(tn);
                             }
                         }
                     }
@@ -211,8 +185,6 @@ namespace Dll2Sdk
 #include ""{name}.hpp""
 {file}");
             File.AppendAllText("out/DLL2SDK/dll2sdk_forward.g.hpp", $@"#include ""{name}\{name}_forward.hpp""
-");
-            File.AppendAllText("out/DLL2SDK/dll2sdk.g.hpp", $@"#include ""{name}\{name}.hpp""
 ");
         }
     }

@@ -1,6 +1,7 @@
 ﻿﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+ using System.Globalization;
+ using System.Linq;
 using Dll2Sdk.Utils;
 using dnlib.DotNet;
 

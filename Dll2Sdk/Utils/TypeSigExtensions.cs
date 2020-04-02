@@ -8,6 +8,28 @@ namespace Dll2Sdk.Utils
 {
     public static class TypeSigExtensions
     {
+        public static HashSet<TypeDef> UsedTypes(this TypeSig typeSig)
+        {
+            var types = new HashSet<TypeDef>();
+            var td = typeSig.GetNonNestedTypeRefScope().ResolveTypeDef();
+            if (td != null)
+            {
+                types.Add(td);
+                if (typeSig.IsGenericInstanceType)
+                {
+                    var gi = typeSig.ToGenericInstSig();
+                    foreach (var gp in gi.GenericArguments)
+                    {
+                        foreach (var t in gp.UsedTypes())
+                        {
+                            types.Add(t);
+                        }
+                    }
+                }
+            }
+            return types;
+        }
+        
         public static string ParsedReferenceTypeDefinition(this TypeSig typeSig)
         {
             var s = ParsedTypeSignatureStr(typeSig);
