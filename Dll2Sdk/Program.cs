@@ -24,13 +24,13 @@ namespace Dll2Sdk
             {
                 foreach (var typeRef in module.GetTypeRefs())
                 {
-                    var rn = typeRef.ResolveTypeDef()?.ReflectionName;
-                    if (rn != null)
+                    var tf = typeRef.ResolveTypeDef();
+                    if (tf != null)
                     {
-                        if (!typeRefs.TryGetValue($"{typeRef.DefinitionAssembly.Name}_{rn}", out var l))
+                        if (!typeRefs.TryGetValue($"{typeRef.DefinitionAssembly.Name}_{tf.ReflectionNamespace}_{tf.ReflectionName}", out var l))
                         {
                             l = new List<TypeRef>();
-                            typeRefs.Add($"{typeRef.DefinitionAssembly.Name}_{rn}", l);
+                            typeRefs.Add($"{typeRef.DefinitionAssembly.Name}_{tf.ReflectionNamespace}_{tf.ReflectionName}", l);
                         }
                         l.Add(typeRef);
                     }
@@ -53,7 +53,7 @@ namespace Dll2Sdk
                     var t = typesToUnNest.Pop();
                     var dt = t.DeclaringType;
 
-                    if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.ReflectionName}", out var l))
+                    if (!typeRefs.TryGetValue($"{t.DefinitionAssembly.Name}_{t.ReflectionNamespace}_{t.ReflectionName}", out var l))
                     {
                         l = new List<TypeRef>();
                     }
