@@ -57,15 +57,15 @@ namespace Dll2Sdk
                     {
                         l = new List<TypeRef>();
                     }
+                    
+                    foreach (var gp in t.DeclaringType.GenericParameters)
+                    {
+                        t.GenericParameters.Remove(gp);
+                    }
 
                     t.Name = $"{dt.Name}_{t.Name}";
                     t.Namespace = dt.Namespace;
                     t.DeclaringType = null;
-
-                    if (t.IsEnum)
-                    {
-                        t.GenericParameters.Clear();
-                    }
 
                     module.Types.Add(t);
 
