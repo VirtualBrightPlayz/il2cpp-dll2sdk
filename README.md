@@ -13,10 +13,12 @@ then compile and you should be good to go
 
 # stuff not supported
 1. static fields in structures
+2. generic packed structures
 
 # assumptions made
 1. all fields in classes are made in the order that they appear in the actual binary
 2. all methods have an "Address" attribute with a string field called "RVA" corresponding to the RVA
 3. virtual methods have a "Slot" field set in the "Address" attribute
+4. packed structures have a "FieldOffset" field with a string that corresponds to the hexadecimal offset of the field
 
 if your dumper does that then it should work with this
