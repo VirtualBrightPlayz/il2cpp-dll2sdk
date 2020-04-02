@@ -35,16 +35,9 @@ namespace Dll2Sdk
                     continue;
                 
                 var canVisit = true;
-                var baseType = currentVisited.BaseType?.ResolveTypeDef();
-                if (baseType != null && baseType.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(baseType))
-                {
-                    canVisit = false;
-                    toVisit.AddToBack(baseType);
-                }
-
                 void CheckDep(TypeSig ts)
                 {
-                    if (ts != null && ts.IsValueType)
+                    if (ts != null && ts.IsValueType && !ts.IsPrimitive)
                     {
                         foreach (var t2 in ts.UsedTypes())
                         {
@@ -58,6 +51,13 @@ namespace Dll2Sdk
                     }
                 }
 
+                var baseType = currentVisited.BaseType?.ResolveTypeDef();
+                if (baseType != null && baseType.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(baseType))
+                {
+                    canVisit = false;
+                    toVisit.AddToBack(baseType);
+                }
+                
                 foreach (var valueField in currentVisited.Fields)
                 {
                     CheckDep(valueField.FieldType);
@@ -114,7 +114,7 @@ namespace Dll2Sdk
             AddDependency(corlib);
             foreach (var dep in module.GetTypes().Where(t => !t.IsInterface))
             {
-                if (dep.BaseType != null)
+                if (dep.BaseType != null && !dep.IsEnum)
                 {
                     AddDependency(dep.BaseType.DefinitionAssembly);
                 }
