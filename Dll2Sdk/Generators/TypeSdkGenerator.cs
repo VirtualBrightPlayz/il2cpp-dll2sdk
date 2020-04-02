@@ -98,7 +98,7 @@ namespace Dll2Sdk.Generators
                                 .GetNamedArgument("Offset", true).Value.ToString());
                             if (offset != null && (int)offset != 0)
                             {
-                                builder.AppendIndentedLine($"uint8_t offset_{++i}[{offset:X}];");
+                                builder.AppendIndentedLine($"uint8_t offset_{++i}[0x{offset:X}];");
                             }
                             builder.AppendIndentedLine(field.ParsedTypeDefinitionStr());
                             
