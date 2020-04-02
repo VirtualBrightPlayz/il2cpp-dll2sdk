@@ -42,12 +42,11 @@ namespace Dll2Sdk
                     toVisit.AddToBack(baseType);
                 }
 
-                foreach (var valueField in currentVisited.Fields)
+                void CheckDep(TypeSig ts)
                 {
-                    var tf = valueField.FieldType.GetNonNestedTypeRefScope().ResolveTypeDef();
-                    if (tf != null && tf.IsValueType)
+                    if (ts != null && ts.IsValueType)
                     {
-                        foreach (var t2 in valueField.FieldType.UsedTypes())
+                        foreach (var t2 in ts.UsedTypes())
                         {
                             var tn = t2.GetNonNestedTypeRefScope().ResolveTypeDef();
                             if (tn != null && tn != currentVisited && tn.DefinitionAssembly == module.Assembly && !visitedTypes.Contains(tn))
@@ -56,6 +55,19 @@ namespace Dll2Sdk
                                 toVisit.AddToBack(tn);
                             }
                         }
+                    }
+                }
+
+                foreach (var valueField in currentVisited.Fields)
+                {
+                    CheckDep(valueField.FieldType);
+                }
+
+                foreach (var method in currentVisited.Methods)
+                {
+                    foreach (var arg in method.Parameters)
+                    {
+                        CheckDep(arg.Type);
                     }
                 }
 
